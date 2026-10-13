@@ -17,7 +17,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = { "http://localhost:5173",
+                "https://study-planner-frontend-ashen.vercel.app" }, allowCredentials = "true")
 public class StudyTaskController {
 
         private final StudyTaskRepository taskRepository;

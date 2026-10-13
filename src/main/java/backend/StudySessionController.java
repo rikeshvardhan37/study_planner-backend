@@ -19,7 +19,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/study-sessions")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = { "http://localhost:5173",
+                "https://study-planner-frontend-ashen.vercel.app" }, allowCredentials = "true")
 public class StudySessionController {
 
         private static final int MIN_DURATION_MINUTES = 20;

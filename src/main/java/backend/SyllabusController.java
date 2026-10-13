@@ -9,126 +9,118 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/syllabus")
-@CrossOrigin(
-        origins = "http://localhost:5173",
-        allowCredentials = "true"
-)
+@CrossOrigin(origins = { "http://localhost:5173",
+                "https://study-planner-frontend-ashen.vercel.app" }, allowCredentials = "true")
 public class SyllabusController {
 
-    private final SyllabusRepository syllabusRepository;
+        private final SyllabusRepository syllabusRepository;
 
-    public SyllabusController(SyllabusRepository syllabusRepository) {
-        this.syllabusRepository = syllabusRepository;
-    }
-
-    @GetMapping
-    public ResponseEntity<?> getSyllabus(HttpSession session) {
-
-        Object userIdObject = session.getAttribute("userId");
-
-        if (userIdObject == null) {
-            return ResponseEntity.status(401)
-                    .body("Not logged in.");
+        public SyllabusController(SyllabusRepository syllabusRepository) {
+                this.syllabusRepository = syllabusRepository;
         }
 
-        Long userId = (Long) userIdObject;
+        @GetMapping
+        public ResponseEntity<?> getSyllabus(HttpSession session) {
 
-        List<Syllabus> syllabus =
-                syllabusRepository.findByUserId(userId);
+                Object userIdObject = session.getAttribute("userId");
 
-        return ResponseEntity.ok(syllabus);
-    }
+                if (userIdObject == null) {
+                        return ResponseEntity.status(401)
+                                        .body("Not logged in.");
+                }
 
-    @PostMapping
-    public ResponseEntity<?> addSyllabus(
-            @RequestBody Syllabus syllabus,
-            HttpSession session) {
+                Long userId = (Long) userIdObject;
 
-        Object userIdObject = session.getAttribute("userId");
+                List<Syllabus> syllabus = syllabusRepository.findByUserId(userId);
 
-        if (userIdObject == null) {
-            return ResponseEntity.status(401)
-                    .body("Not logged in.");
+                return ResponseEntity.ok(syllabus);
         }
 
-        Long userId = (Long) userIdObject;
+        @PostMapping
+        public ResponseEntity<?> addSyllabus(
+                        @RequestBody Syllabus syllabus,
+                        HttpSession session) {
 
-        syllabus.setUserId(userId);
+                Object userIdObject = session.getAttribute("userId");
 
-        Syllabus saved =
-                syllabusRepository.save(syllabus);
+                if (userIdObject == null) {
+                        return ResponseEntity.status(401)
+                                        .body("Not logged in.");
+                }
 
-        return ResponseEntity.ok(saved);
-    }
+                Long userId = (Long) userIdObject;
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateSyllabus(
-            @PathVariable Long id,
-            @RequestBody Syllabus updatedSyllabus,
-            HttpSession session) {
+                syllabus.setUserId(userId);
 
-        Object userIdObject = session.getAttribute("userId");
+                Syllabus saved = syllabusRepository.save(syllabus);
 
-        if (userIdObject == null) {
-            return ResponseEntity.status(401)
-                    .body("Not logged in.");
+                return ResponseEntity.ok(saved);
         }
 
-        Long userId = (Long) userIdObject;
+        @PutMapping("/{id}")
+        public ResponseEntity<?> updateSyllabus(
+                        @PathVariable Long id,
+                        @RequestBody Syllabus updatedSyllabus,
+                        HttpSession session) {
 
-        Syllabus existing =
-                syllabusRepository.findById(id).orElse(null);
+                Object userIdObject = session.getAttribute("userId");
 
-        if (existing == null) {
-            return ResponseEntity.notFound().build();
+                if (userIdObject == null) {
+                        return ResponseEntity.status(401)
+                                        .body("Not logged in.");
+                }
+
+                Long userId = (Long) userIdObject;
+
+                Syllabus existing = syllabusRepository.findById(id).orElse(null);
+
+                if (existing == null) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                if (!userId.equals(existing.getUserId())) {
+                        return ResponseEntity.status(403)
+                                        .body("You cannot modify this syllabus.");
+                }
+
+                existing.setSubject(updatedSyllabus.getSubject());
+                existing.setUnit(updatedSyllabus.getUnit());
+                existing.setTopic(updatedSyllabus.getTopic());
+                existing.setContent(updatedSyllabus.getContent());
+
+                Syllabus saved = syllabusRepository.save(existing);
+
+                return ResponseEntity.ok(saved);
         }
 
-        if (!userId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403)
-                    .body("You cannot modify this syllabus.");
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> deleteSyllabus(
+                        @PathVariable Long id,
+                        HttpSession session) {
+
+                Object userIdObject = session.getAttribute("userId");
+
+                if (userIdObject == null) {
+                        return ResponseEntity.status(401)
+                                        .body("Not logged in.");
+                }
+
+                Long userId = (Long) userIdObject;
+
+                Syllabus existing = syllabusRepository.findById(id).orElse(null);
+
+                if (existing == null) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                if (!userId.equals(existing.getUserId())) {
+                        return ResponseEntity.status(403)
+                                        .body("You cannot delete this syllabus.");
+                }
+
+                syllabusRepository.delete(existing);
+
+                return ResponseEntity.ok(
+                                "Syllabus deleted successfully.");
         }
-
-        existing.setSubject(updatedSyllabus.getSubject());
-        existing.setUnit(updatedSyllabus.getUnit());
-        existing.setTopic(updatedSyllabus.getTopic());
-        existing.setContent(updatedSyllabus.getContent());
-
-        Syllabus saved =
-                syllabusRepository.save(existing);
-
-        return ResponseEntity.ok(saved);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSyllabus(
-            @PathVariable Long id,
-            HttpSession session) {
-
-        Object userIdObject = session.getAttribute("userId");
-
-        if (userIdObject == null) {
-            return ResponseEntity.status(401)
-                    .body("Not logged in.");
-        }
-
-        Long userId = (Long) userIdObject;
-
-        Syllabus existing =
-                syllabusRepository.findById(id).orElse(null);
-
-        if (existing == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (!userId.equals(existing.getUserId())) {
-            return ResponseEntity.status(403)
-                    .body("You cannot delete this syllabus.");
-        }
-
-        syllabusRepository.delete(existing);
-
-        return ResponseEntity.ok(
-                "Syllabus deleted successfully."
-        );
-    }
 }

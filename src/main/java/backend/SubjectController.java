@@ -9,201 +9,181 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/subjects")
-@CrossOrigin(
-        origins = "http://localhost:5173",
-        allowCredentials = "true"
-)
+@CrossOrigin(origins = { "http://localhost:5173",
+                "https://study-planner-frontend-ashen.vercel.app" }, allowCredentials = "true")
 public class SubjectController {
 
-    private final SubjectRepository subjectRepository;
+        private final SubjectRepository subjectRepository;
 
-    public SubjectController(
-            SubjectRepository subjectRepository) {
-        this.subjectRepository = subjectRepository;
-    }
-
-    // =========================================================
-    // GET LOGGED-IN USER ID
-    // =========================================================
-
-    private Long getLoggedInUserId(
-            HttpSession session) {
-
-        Object userIdObject =
-                session.getAttribute("userId");
-
-        if (userIdObject == null) {
-            throw new RuntimeException(
-                    "User is not logged in."
-            );
+        public SubjectController(
+                        SubjectRepository subjectRepository) {
+                this.subjectRepository = subjectRepository;
         }
 
-        return (Long) userIdObject;
-    }
+        // =========================================================
+        // GET LOGGED-IN USER ID
+        // =========================================================
 
-    // =========================================================
-    // GET SUBJECTS
-    // =========================================================
+        private Long getLoggedInUserId(
+                        HttpSession session) {
 
-    @GetMapping
-    public ResponseEntity<?> getSubjects(
-            HttpSession session) {
+                Object userIdObject = session.getAttribute("userId");
 
-        try {
+                if (userIdObject == null) {
+                        throw new RuntimeException(
+                                        "User is not logged in.");
+                }
 
-            Long userId =
-                    getLoggedInUserId(session);
-
-            List<Subject> subjects =
-                    subjectRepository.findByUserId(userId);
-
-            return ResponseEntity.ok(subjects);
-
-        } catch (Exception e) {
-
-            return ResponseEntity.status(401)
-                    .body("User is not logged in.");
+                return (Long) userIdObject;
         }
-    }
 
-    // =========================================================
-    // ADD SUBJECT
-    // =========================================================
+        // =========================================================
+        // GET SUBJECTS
+        // =========================================================
 
-    @PostMapping
-    public ResponseEntity<?> addSubject(
-            @RequestBody Subject subject,
-            HttpSession session) {
+        @GetMapping
+        public ResponseEntity<?> getSubjects(
+                        HttpSession session) {
 
-        try {
+                try {
 
-            Long userId =
-                    getLoggedInUserId(session);
+                        Long userId = getLoggedInUserId(session);
 
-            if (subject.getName() == null ||
-                    subject.getName().trim().isEmpty()) {
+                        List<Subject> subjects = subjectRepository.findByUserId(userId);
 
-                return ResponseEntity.badRequest()
-                        .body("Subject name is required.");
-            }
+                        return ResponseEntity.ok(subjects);
 
-            subject.setUserId(userId);
+                } catch (Exception e) {
 
-            Subject savedSubject =
-                    subjectRepository.save(subject);
-
-            return ResponseEntity.ok(savedSubject);
-
-        } catch (Exception e) {
-
-            return ResponseEntity.status(401)
-                    .body("User is not logged in.");
+                        return ResponseEntity.status(401)
+                                        .body("User is not logged in.");
+                }
         }
-    }
 
-    // =========================================================
-    // UPDATE SUBJECT
-    // =========================================================
+        // =========================================================
+        // ADD SUBJECT
+        // =========================================================
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateSubject(
-            @PathVariable Long id,
-            @RequestBody Subject updatedSubject,
-            HttpSession session) {
+        @PostMapping
+        public ResponseEntity<?> addSubject(
+                        @RequestBody Subject subject,
+                        HttpSession session) {
 
-        try {
+                try {
 
-            Long userId =
-                    getLoggedInUserId(session);
+                        Long userId = getLoggedInUserId(session);
 
-            Subject existingSubject =
-                    subjectRepository
-                            .findById(id)
-                            .orElse(null);
+                        if (subject.getName() == null ||
+                                        subject.getName().trim().isEmpty()) {
 
-            if (existingSubject == null) {
+                                return ResponseEntity.badRequest()
+                                                .body("Subject name is required.");
+                        }
 
-                return ResponseEntity.notFound()
-                        .build();
-            }
+                        subject.setUserId(userId);
 
-            if (!userId.equals(
-                    existingSubject.getUserId())) {
+                        Subject savedSubject = subjectRepository.save(subject);
 
-                return ResponseEntity.status(403)
-                        .body(
-                                "You cannot update this subject."
-                        );
-            }
+                        return ResponseEntity.ok(savedSubject);
 
-            existingSubject.setName(
-                    updatedSubject.getName()
-            );
+                } catch (Exception e) {
 
-            existingSubject.setDescription(
-                    updatedSubject.getDescription()
-            );
-
-            Subject savedSubject =
-                    subjectRepository.save(
-                            existingSubject
-                    );
-
-            return ResponseEntity.ok(savedSubject);
-
-        } catch (Exception e) {
-
-            return ResponseEntity.status(401)
-                    .body("User is not logged in.");
+                        return ResponseEntity.status(401)
+                                        .body("User is not logged in.");
+                }
         }
-    }
 
-    // =========================================================
-    // DELETE SUBJECT
-    // =========================================================
+        // =========================================================
+        // UPDATE SUBJECT
+        // =========================================================
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSubject(
-            @PathVariable Long id,
-            HttpSession session) {
+        @PutMapping("/{id}")
+        public ResponseEntity<?> updateSubject(
+                        @PathVariable Long id,
+                        @RequestBody Subject updatedSubject,
+                        HttpSession session) {
 
-        try {
+                try {
 
-            Long userId =
-                    getLoggedInUserId(session);
+                        Long userId = getLoggedInUserId(session);
 
-            Subject existingSubject =
-                    subjectRepository
-                            .findById(id)
-                            .orElse(null);
+                        Subject existingSubject = subjectRepository
+                                        .findById(id)
+                                        .orElse(null);
 
-            if (existingSubject == null) {
+                        if (existingSubject == null) {
 
-                return ResponseEntity.notFound()
-                        .build();
-            }
+                                return ResponseEntity.notFound()
+                                                .build();
+                        }
 
-            if (!userId.equals(
-                    existingSubject.getUserId())) {
+                        if (!userId.equals(
+                                        existingSubject.getUserId())) {
 
-                return ResponseEntity.status(403)
-                        .body(
-                                "You cannot delete this subject."
-                        );
-            }
+                                return ResponseEntity.status(403)
+                                                .body(
+                                                                "You cannot update this subject.");
+                        }
 
-            subjectRepository.delete(
-                    existingSubject
-            );
+                        existingSubject.setName(
+                                        updatedSubject.getName());
 
-            return ResponseEntity.ok(
-                    "Subject deleted successfully."
-            );
+                        existingSubject.setDescription(
+                                        updatedSubject.getDescription());
 
-        } catch (Exception e) {
+                        Subject savedSubject = subjectRepository.save(
+                                        existingSubject);
 
-            return ResponseEntity.status(401)
-                    .body("User is not logged in.");
+                        return ResponseEntity.ok(savedSubject);
+
+                } catch (Exception e) {
+
+                        return ResponseEntity.status(401)
+                                        .body("User is not logged in.");
+                }
         }
-    }
+
+        // =========================================================
+        // DELETE SUBJECT
+        // =========================================================
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> deleteSubject(
+                        @PathVariable Long id,
+                        HttpSession session) {
+
+                try {
+
+                        Long userId = getLoggedInUserId(session);
+
+                        Subject existingSubject = subjectRepository
+                                        .findById(id)
+                                        .orElse(null);
+
+                        if (existingSubject == null) {
+
+                                return ResponseEntity.notFound()
+                                                .build();
+                        }
+
+                        if (!userId.equals(
+                                        existingSubject.getUserId())) {
+
+                                return ResponseEntity.status(403)
+                                                .body(
+                                                                "You cannot delete this subject.");
+                        }
+
+                        subjectRepository.delete(
+                                        existingSubject);
+
+                        return ResponseEntity.ok(
+                                        "Subject deleted successfully.");
+
+                } catch (Exception e) {
+
+                        return ResponseEntity.status(401)
+                                        .body("User is not logged in.");
+                }
+        }
 }

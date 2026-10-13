@@ -8,191 +8,166 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/exams")
-@CrossOrigin(
-        origins = "http://localhost:5173",
-        allowCredentials = "true"
-)
+@CrossOrigin(origins = { "http://localhost:5173",
+                "https://study-planner-frontend-ashen.vercel.app" }, allowCredentials = "true")
 public class ExamController {
 
-    private final ExamRepository examRepository;
+        private final ExamRepository examRepository;
 
-    public ExamController(
-            ExamRepository examRepository) {
-        this.examRepository = examRepository;
-    }
-
-    // ============================================================
-    // GET ALL EXAMS FOR LOGGED-IN USER
-    // ============================================================
-
-    @GetMapping
-    public ResponseEntity<?> getExams(
-            HttpSession session) {
-
-        Object userIdObject =
-                session.getAttribute("userId");
-
-        if (userIdObject == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Not logged in.");
+        public ExamController(
+                        ExamRepository examRepository) {
+                this.examRepository = examRepository;
         }
 
-        Long userId =
-                (Long) userIdObject;
+        // ============================================================
+        // GET ALL EXAMS FOR LOGGED-IN USER
+        // ============================================================
 
-        List<Exam> exams =
-                examRepository.findByUserId(
-                        userId
-                );
+        @GetMapping
+        public ResponseEntity<?> getExams(
+                        HttpSession session) {
 
-        return ResponseEntity.ok(exams);
-    }
+                Object userIdObject = session.getAttribute("userId");
 
-    // ============================================================
-    // ADD EXAM
-    // ============================================================
+                if (userIdObject == null) {
+                        return ResponseEntity
+                                        .status(401)
+                                        .body("Not logged in.");
+                }
 
-    @PostMapping
-    public ResponseEntity<?> addExam(
-            @RequestBody Exam exam,
-            HttpSession session) {
+                Long userId = (Long) userIdObject;
 
-        Object userIdObject =
-                session.getAttribute("userId");
+                List<Exam> exams = examRepository.findByUserId(
+                                userId);
 
-        if (userIdObject == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Not logged in.");
+                return ResponseEntity.ok(exams);
         }
 
-        Long userId =
-                (Long) userIdObject;
+        // ============================================================
+        // ADD EXAM
+        // ============================================================
 
-        exam.setUserId(userId);
+        @PostMapping
+        public ResponseEntity<?> addExam(
+                        @RequestBody Exam exam,
+                        HttpSession session) {
 
-        Exam savedExam =
-                examRepository.save(exam);
+                Object userIdObject = session.getAttribute("userId");
 
-        return ResponseEntity.ok(
-                savedExam
-        );
-    }
+                if (userIdObject == null) {
+                        return ResponseEntity
+                                        .status(401)
+                                        .body("Not logged in.");
+                }
 
-    // ============================================================
-    // UPDATE EXAM
-    // ============================================================
+                Long userId = (Long) userIdObject;
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateExam(
-            @PathVariable Long id,
-            @RequestBody Exam updatedExam,
-            HttpSession session) {
+                exam.setUserId(userId);
 
-        Object userIdObject =
-                session.getAttribute("userId");
+                Exam savedExam = examRepository.save(exam);
 
-        if (userIdObject == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Not logged in.");
+                return ResponseEntity.ok(
+                                savedExam);
         }
 
-        Long userId =
-                (Long) userIdObject;
+        // ============================================================
+        // UPDATE EXAM
+        // ============================================================
 
-        Exam existingExam =
-                examRepository
-                        .findById(id)
-                        .orElse(null);
+        @PutMapping("/{id}")
+        public ResponseEntity<?> updateExam(
+                        @PathVariable Long id,
+                        @RequestBody Exam updatedExam,
+                        HttpSession session) {
 
-        if (existingExam == null) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
+                Object userIdObject = session.getAttribute("userId");
+
+                if (userIdObject == null) {
+                        return ResponseEntity
+                                        .status(401)
+                                        .body("Not logged in.");
+                }
+
+                Long userId = (Long) userIdObject;
+
+                Exam existingExam = examRepository
+                                .findById(id)
+                                .orElse(null);
+
+                if (existingExam == null) {
+                        return ResponseEntity
+                                        .notFound()
+                                        .build();
+                }
+
+                if (!userId.equals(
+                                existingExam.getUserId())) {
+
+                        return ResponseEntity
+                                        .status(403)
+                                        .body("You cannot modify this exam.");
+                }
+
+                existingExam.setExamName(
+                                updatedExam.getExamName());
+
+                existingExam.setSubject(
+                                updatedExam.getSubject());
+
+                existingExam.setExamDate(
+                                updatedExam.getExamDate());
+
+                existingExam.setDescription(
+                                updatedExam.getDescription());
+
+                Exam savedExam = examRepository.save(
+                                existingExam);
+
+                return ResponseEntity.ok(
+                                savedExam);
         }
 
-        if (!userId.equals(
-                existingExam.getUserId())) {
+        // ============================================================
+        // DELETE EXAM
+        // ============================================================
 
-            return ResponseEntity
-                    .status(403)
-                    .body("You cannot modify this exam.");
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> deleteExam(
+                        @PathVariable Long id,
+                        HttpSession session) {
+
+                Object userIdObject = session.getAttribute("userId");
+
+                if (userIdObject == null) {
+                        return ResponseEntity
+                                        .status(401)
+                                        .body("Not logged in.");
+                }
+
+                Long userId = (Long) userIdObject;
+
+                Exam existingExam = examRepository
+                                .findById(id)
+                                .orElse(null);
+
+                if (existingExam == null) {
+                        return ResponseEntity
+                                        .notFound()
+                                        .build();
+                }
+
+                if (!userId.equals(
+                                existingExam.getUserId())) {
+
+                        return ResponseEntity
+                                        .status(403)
+                                        .body("You cannot delete this exam.");
+                }
+
+                examRepository.delete(
+                                existingExam);
+
+                return ResponseEntity.ok(
+                                "Exam deleted successfully.");
         }
-
-        existingExam.setExamName(
-                updatedExam.getExamName()
-        );
-
-        existingExam.setSubject(
-                updatedExam.getSubject()
-        );
-
-        existingExam.setExamDate(
-                updatedExam.getExamDate()
-        );
-
-        existingExam.setDescription(
-                updatedExam.getDescription()
-        );
-
-        Exam savedExam =
-                examRepository.save(
-                        existingExam
-                );
-
-        return ResponseEntity.ok(
-                savedExam
-        );
-    }
-
-    // ============================================================
-    // DELETE EXAM
-    // ============================================================
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteExam(
-            @PathVariable Long id,
-            HttpSession session) {
-
-        Object userIdObject =
-                session.getAttribute("userId");
-
-        if (userIdObject == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Not logged in.");
-        }
-
-        Long userId =
-                (Long) userIdObject;
-
-        Exam existingExam =
-                examRepository
-                        .findById(id)
-                        .orElse(null);
-
-        if (existingExam == null) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
-        }
-
-        if (!userId.equals(
-                existingExam.getUserId())) {
-
-            return ResponseEntity
-                    .status(403)
-                    .body("You cannot delete this exam.");
-        }
-
-        examRepository.delete(
-                existingExam
-        );
-
-        return ResponseEntity.ok(
-                "Exam deleted successfully."
-        );
-    }
 }
