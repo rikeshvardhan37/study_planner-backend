@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/game")
 @CrossOrigin(
-        origins = {"http://localhost:5173", "https://study-planner-frontend-ashen.vercel.app"}
+        origins = "http://localhost:5173",
         allowCredentials = "true"
 )
 public class GameController {
